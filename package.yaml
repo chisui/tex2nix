@@ -1,7 +1,6 @@
 name: tex2nix 
 version: 0.1.0
-synopsis: 
-description: Minimal akka-inspired- dependently typed actor library
+synopsis: create nix expressions for LaTex files
 maintainer: Philipp Dargel <chisui@informatik.uni-bremen.de>
 license: MIT
 
@@ -11,7 +10,6 @@ dependencies:
 - base
 - containers
 - transformers
-- nix
 
 library:
   source-dirs: src
