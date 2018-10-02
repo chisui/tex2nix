@@ -5,11 +5,17 @@ maintainer: Philipp Dargel <chisui@informatik.uni-bremen.de>
 license: MIT
 
 ghc-options: -fprint-potential-instances -Wall -O2
+default-extensions:
+- PackageImports
+- OverloadedStrings
 
 dependencies:
 - base
 - containers
 - transformers
+- HaTeX
+- text
+- optparse-applicative
 
 library:
   source-dirs: src
