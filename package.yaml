@@ -8,6 +8,7 @@ ghc-options: -fprint-potential-instances -Wall -O2
 default-extensions:
 - PackageImports
 - OverloadedStrings
+- LambdaCase
 
 dependencies:
 - base
