@@ -2,10 +2,14 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PackageImports    #-}
+{-# LANGUAGE TupleSections     #-}
 module Main where
 
 import           "base" Control.Monad                       (join, (<=<), (>=>))
+import           "base" Data.List                           (isSuffixOf)
+import           "base" Data.Maybe                          (fromJust)
 
+import           "containers" Data.Map                      (Map)
 import qualified "containers" Data.Map                      as Map
 import           "containers" Data.Set                      (Set)
 import qualified "containers" Data.Set                      as Set
@@ -55,12 +59,20 @@ main = execParser argsParser >>= \case
     IndexDbArgs{ file } -> indexDb file
   where
     dumpPkgs = parseLaTeXFile >=> \case
-      Left err -> error $ show err
-      Right doc -> mapM_ print . packageNames $ doc
+        Left err -> error $ show err
+        Right doc -> mapM_ print . packageNames $ doc
     indexDb file = do
-      entries <- parseTlpdbFile file
-      print . length $ entries
-      print . tlpdbHeaders . head $ entries
+        entries <- parseTlpdbFile file
+        let index = mkIndex entries
+        mapM_ print . Map.toList $ index
+
+mkIndex :: [TlpdbEntry] -> Map FilePath String
+mkIndex = mconcat . fmap mkSingleIndex
+  where
+    mkSingleIndex (TlpdbEntry hs fs) = Map.fromList . fmap (,eName) . filter isSty $ fs
+      where
+        isSty = isSuffixOf ".sty"
+        eName = fromJust . Map.lookup "name" $ hs
 
 
 packageNames :: LaTeX -> Set Text

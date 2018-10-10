@@ -1,18 +1,18 @@
 {-# LANGUAGE PackageImports #-}
 module Tex.Tlpdb where
 
-import           "base" Control.Applicative                    (liftA2)
 import           "base" Data.Char                              (ord)
-import           "base" Data.Maybe                             (fromMaybe)
+import           "base" Data.Either                            (lefts, rights)
+import           "base" Data.Word                              (Word8)
 
 import           "containers" Data.Map                         (Map)
 import qualified "containers" Data.Map                         as Map
 
 import           "attoparsec" Data.Attoparsec.ByteString
+import qualified "attoparsec" Data.Attoparsec.ByteString       as AP
 import           "attoparsec" Data.Attoparsec.ByteString.Char8 (char)
 
 import qualified "bytestring" Data.ByteString.Char8            as BS
-
 
 data TlpdbEntry = TlpdbEntry
     { tlpdbHeaders :: Map String String
@@ -29,20 +29,32 @@ parseTlpdbFile file = do
 
 
 parseTlpdbEntries :: Parser [TlpdbEntry]
-parseTlpdbEntries = parseTlpdbEntry `sepBy` many1 (char '\n')
+parseTlpdbEntries = many1 parseTlpdbEntry
 
 parseTlpdbEntry :: Parser TlpdbEntry
 parseTlpdbEntry = do
-    allLines <- Map.fromListWith (++) . (fmap . fmap) pure <$> parseLines
-    let files = fromMaybe [] . Map.lookup "" $ allLines
-    let headers = fmap unlines . Map.delete "" $ allLines
-    pure $ TlpdbEntry headers files
-
-parseLines :: Parser [(String, String)]
-parseLines = parseLine `sepBy` char '\n'
-
-parseLine :: Parser (String, String)
-parseLine = liftA2 (,) (strTill ' ') (strTill '\n')
+    lns <- (many1 parseLine <* char '\n') <?> "entry"
+    pure $ TlpdbEntry (Map.fromListWith cat . lefts $ lns) (rights lns)
   where
-    strTill = fmap BS.unpack . takeTill . (==) . toEnum . ord
+    cat a b = a ++ '\n' : b
+
+parseLine :: Parser (Either (String, String) FilePath)
+parseLine = prsr <?> "parseLine"
+  where
+    prsr = do
+        key <- BS.unpack <$> AP.takeWhile (not . isWhitespace) <* char ' '
+        value <- restOfLine
+        pure $ if key == ""
+                then Right value
+                else Left (key, value)
+
+isWhitespace :: Word8 -> Bool
+isWhitespace w = w == toEnum (ord ' ') || endOfLine w
+
+restOfLine :: Parser String
+restOfLine = fmap BS.unpack (takeWhile1 (not . endOfLine)) <* char '\n'
+
+
+endOfLine :: Word8 -> Bool
+endOfLine w = w == 13 || w == 10
 
