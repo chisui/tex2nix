@@ -5,7 +5,7 @@
 {-# LANGUAGE TupleSections     #-}
 module Main where
 
-import           "base" Control.Monad                       (join, (<=<), (>=>))
+import           "base" Control.Monad                       ((<=<), (>=>))
 import           "base" Data.List                           (isSuffixOf)
 import           "base" Data.Maybe                          (fromJust)
 

@@ -24,6 +24,7 @@ library:
 
 executable:
   source-dirs: app 
+  ghc-options: -Werror 
   main: Main.hs
   dependencies: 
   - tex2nix
