@@ -5,10 +5,6 @@ maintainer: Philipp Dargel <chisui@informatik.uni-bremen.de>
 license: MIT
 
 ghc-options: -fprint-potential-instances -Wall -O2
-default-extensions:
-- PackageImports
-- OverloadedStrings
-- LambdaCase
 
 dependencies:
 - base
@@ -16,13 +12,15 @@ dependencies:
 - transformers
 - HaTeX
 - text
+- bytestring 
+- attoparsec
 - optparse-applicative
 
 library:
   source-dirs: src
   ghc-options: -Werror 
   exposed-modules:
-  - Nix.Tex 
+  - Tex.Tlpdb
 
 executable:
   source-dirs: app 

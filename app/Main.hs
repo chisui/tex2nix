@@ -1,21 +1,36 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PackageImports    #-}
 module Main where
 
-import "base" Control.Monad ((<=<), (>=>))
+import           "base" Control.Monad                       (join, (<=<), (>=>))
 
-import "containers" Data.Set (Set)
-import qualified "containers" Data.Set as Set
+import qualified "containers" Data.Map                      as Map
+import           "containers" Data.Set                      (Set)
+import qualified "containers" Data.Set                      as Set
 
-import "optparse-applicative" Options.Applicative (ParserInfo, (<**>), fullDesc, helper, subparser, command, info, progDesc, argument, str, metavar, execParser) 
+import           "optparse-applicative" Options.Applicative (ParserInfo,
+                                                             argument, command,
+                                                             execParser,
+                                                             fullDesc, helper,
+                                                             info, metavar,
+                                                             progDesc, str,
+                                                             subparser, (<**>))
 
-import "HaTeX" Text.LaTeX.Base.Parser (parseLaTeXFile)
-import "HaTeX" Text.LaTeX.Base.Syntax (LaTeX(..), TeXArg(..), lookForCommand)
-import "HaTeX" Text.LaTeX.Base.Render (render)
+import           "HaTeX" Text.LaTeX.Base.Parser             (parseLaTeXFile)
+import           "HaTeX" Text.LaTeX.Base.Render             (render)
+import           "HaTeX" Text.LaTeX.Base.Syntax             (LaTeX (..),
+                                                             TeXArg (..),
+                                                             lookForCommand)
 
-import "text" Data.Text (Text)
-import qualified "text" Data.Text as Text
+import           "text" Data.Text                           (Text)
+import qualified "text" Data.Text                           as Text
 
-data Args 
+import           "tex2nix" Tex.Tlpdb
+
+
+data Args
     = DumpPackagesArgs
         { file :: FilePath
         }
@@ -43,10 +58,13 @@ main = execParser argsParser >>= \case
       Left err -> error $ show err
       Right doc -> mapM_ print . packageNames $ doc
     indexDb file = do
-      putStrLn file
+      entries <- parseTlpdbFile file
+      print . length $ entries
+      print . tlpdbHeaders . head $ entries
+
 
 packageNames :: LaTeX -> Set Text
 packageNames = Set.fromList . (Text.splitOn "," <=< (pkgName =<<) <=< lookForCommand "usepackage")
   where
-    pkgName (FixArg arg) = pure $ render arg 
+    pkgName (FixArg arg) = pure $ render arg
     pkgName _            = []
